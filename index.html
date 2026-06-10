@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="TamarindBiz" />
+  <meta name="theme-color" content="#8B4513" />
+  <title>Tamarind Business Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+
+<!-- ====== PIN LOCK SCREEN ====== -->
+<div id="pin-screen" class="screen-overlay" style="display:none">
+  <div class="pin-box">
+    <div class="app-logo">🌿</div>
+    <h1>Tamarind Business</h1>
+    <p class="pin-subtitle" id="pin-subtitle">Enter your PIN</p>
+    <div class="pin-dots" id="pin-dots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="PIN.press(1)">1</button>
+      <button class="pin-btn" onclick="PIN.press(2)">2</button>
+      <button class="pin-btn" onclick="PIN.press(3)">3</button>
+      <button class="pin-btn" onclick="PIN.press(4)">4</button>
+      <button class="pin-btn" onclick="PIN.press(5)">5</button>
+      <button class="pin-btn" onclick="PIN.press(6)">6</button>
+      <button class="pin-btn" onclick="PIN.press(7)">7</button>
+      <button class="pin-btn" onclick="PIN.press(8)">8</button>
+      <button class="pin-btn" onclick="PIN.press(9)">9</button>
+      <button class="pin-btn pin-clear" onclick="PIN.clear()">⌫</button>
+      <button class="pin-btn" onclick="PIN.press(0)">0</button>
+      <button class="pin-btn pin-ok" onclick="PIN.submit()">✓</button>
+    </div>
+    <p id="pin-error" class="pin-error"></p>
+  </div>
+</div>
+
+<!-- ====== LOGIN SCREEN ====== -->
+<div id="login-screen" class="screen-overlay">
+  <div class="login-box">
+    <div class="app-logo">🌿</div>
+    <h1>Tamarind Business</h1>
+    <p class="subtitle">Business Tracker</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+    </div>
+    <p id="login-error" class="error-text"></p>
+    <button class="btn btn-primary btn-full" onclick="AUTH.login()">Login</button>
+    <button class="btn btn-link" onclick="AUTH.showSignup()">New user? Sign up</button>
+  </div>
+</div>
+
+<!-- ====== SIGNUP SCREEN ====== -->
+<div id="signup-screen" class="screen-overlay" style="display:none">
+  <div class="login-box">
+    <div class="app-logo">🌿</div>
+    <h1>Create Account</h1>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="signup-email" placeholder="your@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="signup-password" placeholder="Min 6 characters" />
+    </div>
+    <div class="form-group">
+      <label>Business Name</label>
+      <input type="text" id="signup-name" placeholder="e.g. Ravi Tamarind Co." />
+    </div>
+    <p id="signup-error" class="error-text"></p>
+    <button class="btn btn-primary btn-full" onclick="AUTH.signup()">Create Account</button>
+    <button class="btn btn-link" onclick="AUTH.showLogin()">Already have account? Login</button>
+  </div>
+</div>
+
+<!-- ====== MAIN APP ====== -->
+<div id="main-app" style="display:none">
+
+  <!-- Header -->
+  <header class="app-header">
+    <button class="hamburger" id="hamburger-btn" onclick="NAV.toggleMenu()" aria-label="Menu">&#9776;</button>
+    <span class="header-title" id="header-title">Dashboard</span>
+    <button class="header-action" id="header-action-btn" style="visibility:hidden">+</button>
+  </header>
+
+  <!-- Slide-out Menu -->
+  <nav class="side-menu" id="side-menu">
+    <div class="menu-header">
+      <div class="app-logo-small">🌿</div>
+      <div>
+        <div class="menu-biz-name" id="menu-biz-name">Tamarind Business</div>
+        <div class="menu-user-email" id="menu-user-email"></div>
+      </div>
+    </div>
+    <ul class="menu-list">
+      <li><button onclick="NAV.go('dashboard')" class="menu-item" data-page="dashboard">🏠 Dashboard</button></li>
+      <li><button onclick="NAV.go('add-entry')" class="menu-item" data-page="add-entry">➕ Add Entry</button></li>
+      <li><button onclick="NAV.go('parties')" class="menu-item" data-page="parties">👥 Parties</button></li>
+      <li><button onclick="NAV.go('purchases')" class="menu-item" data-page="purchases">🛒 Purchases</button></li>
+      <li><button onclick="NAV.go('sales')" class="menu-item" data-page="sales">💰 Sales</button></li>
+      <li><button onclick="NAV.go('expenses')" class="menu-item" data-page="expenses">🧾 Expenses</button></li>
+      <li><button onclick="NAV.go('reports')" class="menu-item" data-page="reports">📊 Reports</button></li>
+    </ul>
+    <div class="menu-footer">
+      <button class="btn btn-outline btn-full" onclick="AUTH.logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="menu-overlay" id="menu-overlay" onclick="NAV.closeMenu()"></div>
+
+  <!-- Page Container -->
+  <main class="page-container" id="page-container">
+    <!-- Pages injected by JS -->
+  </main>
+
+  <!-- Toast notifications -->
+  <div id="toast" class="toast"></div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/add-entry.js"></script>
+<script src="js/parties.js"></script>
+<script src="js/lists.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
