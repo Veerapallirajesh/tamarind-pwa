@@ -1,8 +1,8 @@
 /* ============================================================
    config.js — Supabase credentials (replace with your values)
    ============================================================ */
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://jnmqjncqwuwfozouynng.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ouGlT_4McuuX-iGoqDqLig_3p-9DH_m';
 
 // Seed types for purchase dropdown
 const SEED_TYPES = ['Raw Seeds', 'Cleaned Seeds', 'Mixed Seeds', 'Sorted Seeds', 'Other'];
