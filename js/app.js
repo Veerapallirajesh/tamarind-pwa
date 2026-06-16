@@ -5,13 +5,13 @@
 const NAV = {
   _current: null,
   _pageRenderers: {
-    dashboard:   () => DASHBOARD.render(),
-    'add-entry': () => ADD_ENTRY.render(),
-    parties:     () => PARTIES.render(),
-    purchases:   () => LISTS.render('purchases'),
-    sales:       () => LISTS.render('sales'),
-    expenses:    () => LISTS.render('expenses'),
-    reports:     () => REPORTS.render()
+    dashboard:   ()       => DASHBOARD.render(),
+    'add-entry': (params) => ADD_ENTRY.render(params),
+    parties:     ()       => PARTIES.render(),
+    purchases:   ()       => LISTS.render('purchases'),
+    sales:       ()       => LISTS.render('sales'),
+    expenses:    ()       => LISTS.render('expenses'),
+    reports:     ()       => REPORTS.render()
   },
   _titles: {
     dashboard:   'Dashboard',

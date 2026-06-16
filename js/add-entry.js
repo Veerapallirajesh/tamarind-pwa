@@ -27,8 +27,14 @@ const ADD_ENTRY = {
   },
 
   _html() {
+    const isEdit = !!this._editData;
     return `
-      <div class="type-selector">
+      ${isEdit ? `
+        <div style="display:flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:12px 14px;margin-bottom:14px">
+          <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span style="font-size:14px;font-weight:600;color:#1D4ED8">Editing ${this._type} — changes will update the existing record</span>
+        </div>` : ''}
+      <div class="type-selector" id="type-selector" style="${isEdit ? 'opacity:0.4;pointer-events:none' : ''}">
         <button class="type-btn" id="type-btn-purchase" onclick="ADD_ENTRY.switchType('purchase')">
           <div class="type-btn-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -127,7 +133,7 @@ const ADD_ENTRY = {
           <textarea id="notes" placeholder="Any extra details..."></textarea>
         </div>
         <input type="hidden" id="edit-id" />
-        <button class="btn btn-primary btn-full" onclick="ADD_ENTRY.save()">Save Purchase</button>
+        <button class="btn btn-primary btn-full" onclick="ADD_ENTRY.save()">${this._editData ? 'Update Purchase' : 'Save Purchase'}</button>
       </div>`;
   },
 
@@ -185,7 +191,7 @@ const ADD_ENTRY = {
           <textarea id="notes" placeholder="Any extra details..."></textarea>
         </div>
         <input type="hidden" id="edit-id" />
-        <button class="btn btn-primary btn-full" onclick="ADD_ENTRY.save()">Save Sale</button>
+        <button class="btn btn-primary btn-full" onclick="ADD_ENTRY.save()">${this._editData ? 'Update Sale' : 'Save Sale'}</button>
       </div>`;
   },
 
@@ -224,7 +230,7 @@ const ADD_ENTRY = {
           <textarea id="notes" placeholder="What was this for?"></textarea>
         </div>
         <input type="hidden" id="edit-id" />
-        <button class="btn btn-primary btn-full" onclick="ADD_ENTRY.save()">Save Expense</button>
+        <button class="btn btn-primary btn-full" onclick="ADD_ENTRY.save()">${this._editData ? 'Update Expense' : 'Save Expense'}</button>
       </div>`;
   },
 
@@ -300,7 +306,7 @@ const ADD_ENTRY = {
     const rec = { party_id: partyId, material, quantity: qty, rate, paid_amount: paid, due_date: due || null, notes };
     if (editId) rec.id = editId;
     await DB.savePurchase(rec);
-    Utils.toast('Purchase saved!', 'success');
+    Utils.toast(editId ? 'Purchase updated!' : 'Purchase saved!', 'success');
     NAV.go('purchases');
   },
 
@@ -327,7 +333,7 @@ const ADD_ENTRY = {
     };
     if (editId) rec.id = editId;
     await DB.saveSale(rec);
-    Utils.toast('Sale saved!', 'success');
+    Utils.toast(editId ? 'Sale updated!' : 'Sale saved!', 'success');
     NAV.go('sales');
   },
 
@@ -345,7 +351,7 @@ const ADD_ENTRY = {
     const rec = { category, sub_category: subCat || null, amount, date, notes };
     if (editId) rec.id = editId;
     await DB.saveExpense(rec);
-    Utils.toast('Expense saved!', 'success');
+    Utils.toast(editId ? 'Expense updated!' : 'Expense saved!', 'success');
     NAV.go('expenses');
   },
 
