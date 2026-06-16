@@ -1,5 +1,6 @@
 /* ============================================================
-   dashboard.js — Dashboard page
+   dashboard.js — Dashboard page v2
+   Clean layout, no emojis, net position, loss/waste, labour
    ============================================================ */
 
 const DASHBOARD = {
@@ -16,62 +17,95 @@ const DASHBOARD = {
 
   _html(d) {
     const overdueCount = d.overduePurchases.length + d.overdueSales.length;
-    return `
-      <div class="section-title">📊 Overview</div>
+    const netClass = d.netPosition >= 0 ? 'positive' : 'negative';
+    const netLabel = d.netPosition >= 0 ? 'Net Receivable' : 'Net Payable';
 
+    return `
+
+      <!-- Net Position -->
+      <div class="net-card ${netClass}">
+        <div class="nc-label">${netLabel}</div>
+        <div class="nc-value">${Utils.currency(Math.abs(d.netPosition))}</div>
+        <div class="nc-sub">Receivable ${Utils.currency(d.totalReceivable)} &nbsp;|&nbsp; Payable ${Utils.currency(d.totalPayable)}</div>
+      </div>
+
+      <!-- Financial Overview -->
+      <div class="section-title">Financial Overview</div>
       <div class="dash-grid">
-        <div class="dash-card red-card">
-          <div class="label">Total Payable</div>
-          <div class="value">${Utils.currency(d.totalPayable)}</div>
-        </div>
         <div class="dash-card green-card">
-          <div class="label">Total Receivable</div>
+          <div class="label">Receivable</div>
           <div class="value">${Utils.currency(d.totalReceivable)}</div>
         </div>
+        <div class="dash-card red-card">
+          <div class="label">Payable</div>
+          <div class="value">${Utils.currency(d.totalPayable)}</div>
+        </div>
         <div class="dash-card orange-card">
-          <div class="label">Total Expenses</div>
+          <div class="label">Expenses</div>
           <div class="value">${Utils.currency(d.totalExpenses)}</div>
         </div>
         <div class="dash-card blue-card">
           <div class="label">Overdue</div>
-          <div class="value">${overdueCount} entries</div>
+          <div class="value" style="${overdueCount > 0 ? 'color:var(--danger)' : ''}">${overdueCount}</div>
         </div>
       </div>
 
-      <div class="section-title">💰 Sales</div>
+      <!-- Operations -->
+      <div class="section-title">This Month</div>
       <div class="dash-grid">
         <div class="dash-card">
-          <div class="label">Today</div>
+          <div class="label">Sales</div>
+          <div class="value" style="color:var(--success)">${Utils.currency(d.monthSales)}</div>
+        </div>
+        <div class="dash-card">
+          <div class="label">Purchases</div>
+          <div class="value" style="color:var(--info)">${Utils.currency(d.monthPurchases)}</div>
+        </div>
+        <div class="dash-card">
+          <div class="label">Sales Today</div>
           <div class="value">${Utils.currency(d.todaySales)}</div>
         </div>
         <div class="dash-card">
-          <div class="label">This Month</div>
-          <div class="value">${Utils.currency(d.monthSales)}</div>
-        </div>
-      </div>
-
-      <div class="section-title">🛒 Purchases</div>
-      <div class="dash-grid">
-        <div class="dash-card">
-          <div class="label">Today</div>
+          <div class="label">Purchases Today</div>
           <div class="value">${Utils.currency(d.todayPurchases)}</div>
         </div>
+      </div>
+
+      <!-- Insights -->
+      <div class="section-title">Insights</div>
+      <div class="dash-grid">
+        <div class="dash-card ${d.totalLoss > 0 ? 'orange-card' : ''}">
+          <div class="label">Total Loss / Waste</div>
+          <div class="value" style="${d.totalLoss > 0 ? 'color:var(--warning)' : 'color:var(--success)'}">
+            ${d.totalLoss > 0 ? d.totalLoss.toFixed(2) + ' kg' : '0 kg'}
+          </div>
+        </div>
+        <div class="dash-card purple-card">
+          <div class="label">Total Labour Cost</div>
+          <div class="value">${Utils.currency(d.totalLabour)}</div>
+        </div>
+        <div class="dash-card teal-card">
+          <div class="label">Permanent Labour</div>
+          <div class="value">${Utils.currency(d.permanentLabour)}</div>
+        </div>
         <div class="dash-card">
-          <div class="label">This Month</div>
-          <div class="value">${Utils.currency(d.monthPurchases)}</div>
+          <div class="label">Contract Labour</div>
+          <div class="value">${Utils.currency(d.contractLabour)}</div>
         </div>
       </div>
 
+      <!-- Overdue alerts -->
       ${overdueCount > 0 ? this._overdueSection(d.overduePurchases, d.overdueSales) : ''}
 
-      <div class="section-title">⚡ Quick Actions</div>
+      <!-- Quick Actions -->
+      <div class="section-title">Quick Actions</div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="NAV.go('add-entry')">➕ Add Entry</button>
-        <button class="btn btn-outline" onclick="NAV.go('reports')">📊 Reports</button>
+        <button class="btn btn-primary" onclick="NAV.go('add-entry')">Add Entry</button>
+        <button class="btn btn-outline" onclick="NAV.go('reports')">Reports</button>
       </div>
       <div class="btn-row mt-8">
-        <button class="btn btn-outline" onclick="NAV.go('parties')">👥 Parties</button>
-        <button class="btn btn-outline" onclick="DASHBOARD.openSettings()">⚙️ Settings</button>
+        <button class="btn btn-outline" onclick="NAV.go('parties')">Parties</button>
+        <button class="btn btn-outline" onclick="DASHBOARD.openSettings()">Settings</button>
       </div>
 
       ${this._settingsModal()}
@@ -87,25 +121,28 @@ const DASHBOARD = {
       <div class="overdue-item">
         <div>
           <div class="name">${Utils.esc(o.name)}</div>
-          <div class="text-muted" style="font-size:13px">${o.type} · Due: ${Utils.dateDisplay(o.due)}</div>
+          <div class="text-muted">${o.type} · Due: ${Utils.dateDisplay(o.due)}</div>
         </div>
         <div class="amount">${Utils.currency(o.amount)}</div>
       </div>`).join('');
     return `
       <div class="overdue-alert">
-        <div class="oa-title">⚠️ Overdue Payments (${allOverdue.length})</div>
+        <div class="oa-title">Overdue Payments (${allOverdue.length})</div>
         ${rows}
       </div>`;
   },
 
   _settingsModal() {
     const pinEnabled = PIN.isEnabled();
-    const bizName = localStorage.getItem('tmr_biz_name') || '';
+    const bizName    = localStorage.getItem('tmr_biz_name') || '';
     return `
       <div class="modal-overlay" id="settings-modal">
         <div class="modal-sheet">
           <div class="modal-handle"></div>
-          <div class="modal-title">⚙️ Settings <button class="modal-close" onclick="DASHBOARD.closeSettings()">✕</button></div>
+          <div class="modal-title">
+            Settings
+            <button class="modal-close" onclick="DASHBOARD.closeSettings()">&#x2715;</button>
+          </div>
 
           <div class="form-group">
             <label>Business Name</label>
@@ -114,9 +151,9 @@ const DASHBOARD = {
           <button class="btn btn-primary btn-full" onclick="DASHBOARD.saveBizName()">Save Name</button>
 
           <hr class="divider" />
-          <div class="section-title">🔐 PIN Lock</div>
+          <div class="section-title">PIN Lock</div>
           ${pinEnabled ? `
-            <p class="text-muted" style="margin-bottom:12px">PIN lock is <strong>enabled</strong>. App requires PIN on each session.</p>
+            <p class="text-muted" style="margin-bottom:12px">PIN lock is <strong>enabled</strong>.</p>
             <div class="btn-row">
               <button class="btn btn-outline" onclick="PIN.show('change');DASHBOARD.closeSettings()">Change PIN</button>
               <button class="btn btn-danger" onclick="PIN.disable();DASHBOARD.closeSettings()">Disable PIN</button>
@@ -127,7 +164,7 @@ const DASHBOARD = {
           `}
 
           <hr class="divider" />
-          <div class="section-title">📤 Export Data</div>
+          <div class="section-title">Export Data</div>
           <div class="btn-row">
             <button class="btn btn-outline" onclick="DASHBOARD.exportAll('purchases')">Purchases CSV</button>
             <button class="btn btn-outline" onclick="DASHBOARD.exportAll('sales')">Sales CSV</button>
@@ -137,13 +174,8 @@ const DASHBOARD = {
       </div>`;
   },
 
-  openSettings() {
-    document.getElementById('settings-modal')?.classList.add('show');
-  },
-
-  closeSettings() {
-    document.getElementById('settings-modal')?.classList.remove('show');
-  },
+  openSettings()  { document.getElementById('settings-modal')?.classList.add('show'); },
+  closeSettings() { document.getElementById('settings-modal')?.classList.remove('show'); },
 
   saveBizName() {
     const name = document.getElementById('settings-biz-name').value.trim();
@@ -158,13 +190,13 @@ const DASHBOARD = {
   async exportAll(type) {
     try {
       let data;
-      if (type === 'purchases') data = await DB.getPurchases();
-      else if (type === 'sales') data = await DB.getSales();
-      else data = await DB.getExpenses();
+      if (type === 'purchases')    data = await DB.getPurchases();
+      else if (type === 'sales')   data = await DB.getSales();
+      else                         data = await DB.getExpenses();
       Utils.exportCSV(data.map(r => {
-        const clean = { ...r };
-        delete clean.user_id; delete clean.deleted;
-        return clean;
+        const c = { ...r };
+        delete c.user_id; delete c.deleted; delete c.parties;
+        return c;
       }), `${type}-${Utils.today()}.csv`);
     } catch (e) {
       Utils.toast('Export failed: ' + e.message, 'error');

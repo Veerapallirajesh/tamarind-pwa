@@ -1,19 +1,25 @@
 /* ============================================================
-   config.js — Supabase credentials (replace with your values)
+   config.js — App constants
    ============================================================ */
 const SUPABASE_URL = 'https://jnmqjncqwuwfozouynng.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ouGlT_4McuuX-iGoqDqLig_3p-9DH_m';
 
-// Seed types for purchase dropdown
-const SEED_TYPES = ['Raw Seeds', 'Cleaned Seeds', 'Mixed Seeds', 'Sorted Seeds', 'Other'];
+// Raw material for purchase
+const RAW_MATERIALS = ['Tamarind Seeds'];
 
-// Products for sales
-const PRODUCTS = ['Dhal', 'Husk', 'Powder', 'Oil', 'Other'];
+// Finished products for sales
+const PRODUCTS = ['Tamarind Dhal', 'Tamarind Husk', 'PVC', 'Waste Tamarind'];
 
 // Expense categories
-const EXPENSE_CATEGORIES = ['Food', 'Petrol', 'Office', 'Travel', 'Machinery', 'Labour', 'Other'];
+const EXPENSE_CATEGORIES = ['Food', 'Petrol', 'Office', 'Travel', 'Machinery', 'Labour'];
 
-// App PIN storage key
-const PIN_KEY = 'tmr_pin';
+// Labour sub-categories (shown when Labour is selected)
+const LABOUR_SUBCATEGORIES = ['Permanent Labour', 'Contract Labour'];
+
+// Purchase tax %
+const PURCHASE_TAX_PCT = 5;
+
+// PIN storage keys
+const PIN_KEY         = 'tmr_pin';
 const PIN_ENABLED_KEY = 'tmr_pin_enabled';
-const SESSION_KEY = 'tmr_session';
+const SESSION_KEY     = 'tmr_session';

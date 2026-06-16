@@ -1,8 +1,7 @@
 /* ============================================================
-   db.js — Supabase data access layer
+   db.js — Supabase data access layer v2
    ============================================================ */
 
-// Dynamically load Supabase SDK from CDN on first DB call
 let _supabase = null;
 
 async function getClient() {
@@ -65,8 +64,7 @@ const DB = {
   },
   async saveParty(party) {
     const sb = await getClient();
-    const uid = await this.userId();
-    party.user_id = uid;
+    party.user_id = await this.userId();
     if (party.id) {
       const { data, error } = await sb.from('parties').update(party).eq('id', party.id).select().single();
       if (error) throw error; return data;
@@ -84,7 +82,8 @@ const DB = {
   /* ---- PURCHASES ---- */
   async getPurchases(filters = {}) {
     const sb = await getClient();
-    let q = sb.from('purchases').select('*, parties(name)').eq('deleted', false).order('created_at', { ascending: false });
+    let q = sb.from('purchases').select('*, parties(name)')
+      .eq('deleted', false).order('created_at', { ascending: false });
     if (filters.party_id) q = q.eq('party_id', filters.party_id);
     if (filters.from)     q = q.gte('created_at', filters.from);
     if (filters.to)       q = q.lte('created_at', filters.to + 'T23:59:59');
@@ -95,7 +94,16 @@ const DB = {
   async savePurchase(rec) {
     const sb = await getClient();
     rec.user_id = await this.userId();
-    rec.pending = (rec.total || 0) - (rec.paid_amount || 0);
+    // Calculate tax and totals
+    const subtotal   = (rec.quantity || 0) * (rec.rate || 0);
+    const taxPct     = rec.tax_pct != null ? rec.tax_pct : PURCHASE_TAX_PCT;
+    const taxAmount  = subtotal * taxPct / 100;
+    const total      = subtotal + taxAmount;
+    rec.subtotal     = subtotal;
+    rec.tax_pct      = taxPct;
+    rec.tax_amount   = taxAmount;
+    rec.total        = total;
+    rec.pending      = total - (rec.paid_amount || 0);
     if (rec.id) {
       const { data, error } = await sb.from('purchases').update(rec).eq('id', rec.id).select().single();
       if (error) throw error; return data;
@@ -113,7 +121,8 @@ const DB = {
   /* ---- SALES ---- */
   async getSales(filters = {}) {
     const sb = await getClient();
-    let q = sb.from('sales').select('*, parties(name)').eq('deleted', false).order('created_at', { ascending: false });
+    let q = sb.from('sales').select('*, parties(name)')
+      .eq('deleted', false).order('created_at', { ascending: false });
     if (filters.party_id) q = q.eq('party_id', filters.party_id);
     if (filters.from)     q = q.gte('created_at', filters.from);
     if (filters.to)       q = q.lte('created_at', filters.to + 'T23:59:59');
@@ -124,7 +133,11 @@ const DB = {
   async saveSale(rec) {
     const sb = await getClient();
     rec.user_id = await this.userId();
-    rec.pending = (rec.total || 0) - (rec.received_amount || 0);
+    // loss = expected - actual
+    rec.loss_quantity = Math.max(0, (rec.expected_quantity || 0) - (rec.actual_quantity || 0));
+    // total based on actual quantity
+    rec.total   = (rec.actual_quantity || 0) * (rec.rate || 0);
+    rec.pending = rec.total - (rec.received_amount || 0);
     if (rec.id) {
       const { data, error } = await sb.from('sales').update(rec).eq('id', rec.id).select().single();
       if (error) throw error; return data;
@@ -142,9 +155,11 @@ const DB = {
   /* ---- EXPENSES ---- */
   async getExpenses(filters = {}) {
     const sb = await getClient();
-    let q = sb.from('expenses').select('*').eq('deleted', false).order('date', { ascending: false });
+    let q = sb.from('expenses').select('*')
+      .eq('deleted', false).order('date', { ascending: false });
     if (filters.from) q = q.gte('date', filters.from);
     if (filters.to)   q = q.lte('date', filters.to);
+    if (filters.category) q = q.eq('category', filters.category);
     const { data, error } = await q;
     if (error) throw error;
     return data;
@@ -168,24 +183,44 @@ const DB = {
 
   /* ---- DASHBOARD SUMMARY ---- */
   async getDashboard() {
-    const today = Utils.today();
+    const today      = Utils.today();
     const monthStart = Utils.monthStart();
     const [purchases, sales, expenses] = await Promise.all([
       this.getPurchases(), this.getSales(), this.getExpenses()
     ]);
+
     const totalPayable    = purchases.reduce((s, r) => s + (r.pending || 0), 0);
     const totalReceivable = sales.reduce((s, r) => s + (r.pending || 0), 0);
+    const netPosition     = totalReceivable - totalPayable;
+
     const totalExpenses   = expenses.reduce((s, r) => s + (r.amount || 0), 0);
-    const todaySales      = sales.filter(r => r.created_at?.slice(0,10) === today).reduce((s,r)=>s+(r.total||0),0);
-    const monthSales      = sales.filter(r => r.created_at?.slice(0,10) >= monthStart).reduce((s,r)=>s+(r.total||0),0);
-    const todayPurchases  = purchases.filter(r => r.created_at?.slice(0,10) === today).reduce((s,r)=>s+(r.total||0),0);
-    const monthPurchases  = purchases.filter(r => r.created_at?.slice(0,10) >= monthStart).reduce((s,r)=>s+(r.total||0),0);
+    const totalPurchases  = purchases.reduce((s, r) => s + (r.total || 0), 0);
+    const totalSales      = sales.reduce((s, r) => s + (r.total || 0), 0);
+
+    const todaySales     = sales.filter(r => r.created_at?.slice(0,10) === today).reduce((s,r)=>s+(r.total||0),0);
+    const monthSales     = sales.filter(r => r.created_at?.slice(0,10) >= monthStart).reduce((s,r)=>s+(r.total||0),0);
+    const todayPurchases = purchases.filter(r => r.created_at?.slice(0,10) === today).reduce((s,r)=>s+(r.total||0),0);
+    const monthPurchases = purchases.filter(r => r.created_at?.slice(0,10) >= monthStart).reduce((s,r)=>s+(r.total||0),0);
+
     const overduePurchases = purchases.filter(r => Utils.isOverdue(r.due_date, r.pending));
     const overdueSales     = sales.filter(r => Utils.isOverdue(r.due_date, r.pending));
+
+    // Loss / waste from sales
+    const totalLoss = sales.reduce((s, r) => s + (r.loss_quantity || 0), 0);
+
+    // Labour breakdown
+    const labourExpenses   = expenses.filter(r => r.category === 'Labour');
+    const permanentLabour  = labourExpenses.filter(r => r.sub_category === 'Permanent Labour').reduce((s,r)=>s+(r.amount||0),0);
+    const contractLabour   = labourExpenses.filter(r => r.sub_category === 'Contract Labour').reduce((s,r)=>s+(r.amount||0),0);
+    const totalLabour      = permanentLabour + contractLabour;
+
     return {
-      totalPayable, totalReceivable, totalExpenses,
+      totalPayable, totalReceivable, netPosition,
+      totalExpenses, totalPurchases, totalSales,
       todaySales, monthSales, todayPurchases, monthPurchases,
-      overduePurchases, overdueSales
+      overduePurchases, overdueSales,
+      totalLoss,
+      permanentLabour, contractLabour, totalLabour
     };
   },
 
@@ -195,10 +230,9 @@ const DB = {
       this.getPurchases({ party_id: partyId }),
       this.getSales({ party_id: partyId })
     ]);
-    const txns = [
+    return [
       ...purchases.map(r => ({ ...r, _type: 'purchase', date: r.created_at?.slice(0,10) })),
       ...sales.map(r => ({ ...r, _type: 'sale', date: r.created_at?.slice(0,10) }))
     ].sort((a, b) => a.date > b.date ? 1 : -1);
-    return txns;
   }
 };

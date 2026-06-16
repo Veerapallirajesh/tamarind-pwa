@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="TamarindBiz" />
-  <meta name="theme-color" content="#8B4513" />
+  <meta name="theme-color" content="#2E7D32" />
   <title>Tamarind Business Tracker</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -17,7 +17,23 @@
 <!-- ====== PIN LOCK SCREEN ====== -->
 <div id="pin-screen" class="screen-overlay" style="display:none">
   <div class="pin-box">
-    <div class="app-logo">🌿</div>
+    <div class="app-logo">
+      <svg width="44" height="44" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#2E7D32" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="100" cy="80" rx="38" ry="42"/>
+          <ellipse cx="76" cy="58" rx="14" ry="18"/>
+          <ellipse cx="124" cy="58" rx="14" ry="18"/>
+          <path d="M68 95 Q55 130 60 160 Q80 185 100 188 Q120 185 140 160 Q145 130 132 95"/>
+          <path d="M85 130 Q100 145 115 130"/>
+          <circle cx="88" cy="80" r="4" fill="#2E7D32"/>
+          <circle cx="112" cy="80" r="4" fill="#2E7D32"/>
+          <path d="M100 100 Q90 120 85 145"/>
+          <path d="M100 100 Q105 115 108 118 Q118 125 125 115 Q130 105 120 98"/>
+          <path d="M62 95 Q45 80 42 60 Q40 40 55 38 Q68 36 72 52"/>
+          <path d="M138 95 Q155 80 158 60 Q160 40 145 38 Q132 36 128 52"/>
+        </g>
+      </svg>
+    </div>
     <h1>Tamarind Business</h1>
     <p class="pin-subtitle" id="pin-subtitle">Enter your PIN</p>
     <div class="pin-dots" id="pin-dots">
@@ -33,9 +49,9 @@
       <button class="pin-btn" onclick="PIN.press(7)">7</button>
       <button class="pin-btn" onclick="PIN.press(8)">8</button>
       <button class="pin-btn" onclick="PIN.press(9)">9</button>
-      <button class="pin-btn pin-clear" onclick="PIN.clear()">⌫</button>
+      <button class="pin-btn pin-clear" onclick="PIN.clear()">&#9003;</button>
       <button class="pin-btn" onclick="PIN.press(0)">0</button>
-      <button class="pin-btn pin-ok" onclick="PIN.submit()">✓</button>
+      <button class="pin-btn pin-ok" onclick="PIN.submit()">&#10003;</button>
     </div>
     <p id="pin-error" class="pin-error"></p>
   </div>
@@ -44,7 +60,23 @@
 <!-- ====== LOGIN SCREEN ====== -->
 <div id="login-screen" class="screen-overlay">
   <div class="login-box">
-    <div class="app-logo">🌿</div>
+    <div class="app-logo">
+      <svg width="44" height="44" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#2E7D32" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="100" cy="80" rx="38" ry="42"/>
+          <ellipse cx="76" cy="58" rx="14" ry="18"/>
+          <ellipse cx="124" cy="58" rx="14" ry="18"/>
+          <path d="M68 95 Q55 130 60 160 Q80 185 100 188 Q120 185 140 160 Q145 130 132 95"/>
+          <path d="M85 130 Q100 145 115 130"/>
+          <circle cx="88" cy="80" r="4" fill="#2E7D32"/>
+          <circle cx="112" cy="80" r="4" fill="#2E7D32"/>
+          <path d="M100 100 Q90 120 85 145"/>
+          <path d="M100 100 Q105 115 108 118 Q118 125 125 115 Q130 105 120 98"/>
+          <path d="M62 95 Q45 80 42 60 Q40 40 55 38 Q68 36 72 52"/>
+          <path d="M138 95 Q155 80 158 60 Q160 40 145 38 Q132 36 128 52"/>
+        </g>
+      </svg>
+    </div>
     <h1>Tamarind Business</h1>
     <p class="subtitle">Business Tracker</p>
     <div class="form-group">
@@ -64,7 +96,16 @@
 <!-- ====== SIGNUP SCREEN ====== -->
 <div id="signup-screen" class="screen-overlay" style="display:none">
   <div class="login-box">
-    <div class="app-logo">🌿</div>
+    <div class="app-logo">
+      <svg width="44" height="44" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#2E7D32" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="100" cy="80" rx="38" ry="42"/>
+          <ellipse cx="76" cy="58" rx="14" ry="18"/>
+          <ellipse cx="124" cy="58" rx="14" ry="18"/>
+          <path d="M68 95 Q55 130 60 160 Q80 185 100 188 Q120 185 140 160 Q145 130 132 95"/>
+        </g>
+      </svg>
+    </div>
     <h1>Create Account</h1>
     <div class="form-group">
       <label>Email</label>
@@ -97,20 +138,45 @@
   <!-- Slide-out Menu -->
   <nav class="side-menu" id="side-menu">
     <div class="menu-header">
-      <div class="app-logo-small">🌿</div>
+      <div class="menu-logo">
+        <svg width="28" height="28" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="100" cy="80" rx="38" ry="42"/>
+            <ellipse cx="76" cy="58" rx="14" ry="18"/>
+            <ellipse cx="124" cy="58" rx="14" ry="18"/>
+            <path d="M68 95 Q55 130 60 160 Q80 185 100 188 Q120 185 140 160 Q145 130 132 95"/>
+            <path d="M62 95 Q45 80 42 60 Q40 40 55 38 Q68 36 72 52"/>
+            <path d="M138 95 Q155 80 158 60 Q160 40 145 38 Q132 36 128 52"/>
+          </g>
+        </svg>
+      </div>
       <div>
         <div class="menu-biz-name" id="menu-biz-name">Tamarind Business</div>
         <div class="menu-user-email" id="menu-user-email"></div>
       </div>
     </div>
     <ul class="menu-list">
-      <li><button onclick="NAV.go('dashboard')" class="menu-item" data-page="dashboard">🏠 Dashboard</button></li>
-      <li><button onclick="NAV.go('add-entry')" class="menu-item" data-page="add-entry">➕ Add Entry</button></li>
-      <li><button onclick="NAV.go('parties')" class="menu-item" data-page="parties">👥 Parties</button></li>
-      <li><button onclick="NAV.go('purchases')" class="menu-item" data-page="purchases">🛒 Purchases</button></li>
-      <li><button onclick="NAV.go('sales')" class="menu-item" data-page="sales">💰 Sales</button></li>
-      <li><button onclick="NAV.go('expenses')" class="menu-item" data-page="expenses">🧾 Expenses</button></li>
-      <li><button onclick="NAV.go('reports')" class="menu-item" data-page="reports">📊 Reports</button></li>
+      <li><button onclick="NAV.go('dashboard')" class="menu-item" data-page="dashboard">
+        <span class="menu-item-icon">D</span>Dashboard
+      </button></li>
+      <li><button onclick="NAV.go('add-entry')" class="menu-item" data-page="add-entry">
+        <span class="menu-item-icon">+</span>Add Entry
+      </button></li>
+      <li><button onclick="NAV.go('parties')" class="menu-item" data-page="parties">
+        <span class="menu-item-icon">P</span>Parties
+      </button></li>
+      <li><button onclick="NAV.go('purchases')" class="menu-item" data-page="purchases">
+        <span class="menu-item-icon">B</span>Purchases
+      </button></li>
+      <li><button onclick="NAV.go('sales')" class="menu-item" data-page="sales">
+        <span class="menu-item-icon">S</span>Sales
+      </button></li>
+      <li><button onclick="NAV.go('expenses')" class="menu-item" data-page="expenses">
+        <span class="menu-item-icon">E</span>Expenses
+      </button></li>
+      <li><button onclick="NAV.go('reports')" class="menu-item" data-page="reports">
+        <span class="menu-item-icon">R</span>Reports
+      </button></li>
     </ul>
     <div class="menu-footer">
       <button class="btn btn-outline btn-full" onclick="AUTH.logout()">Logout</button>
