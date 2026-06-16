@@ -279,9 +279,6 @@ const DB = {
     return payment;
   },
 
-    return payment;
-  },
-
   /* ---- DASHBOARD SUMMARY ---- */
   async getDashboard() {
     const today      = Utils.today();
