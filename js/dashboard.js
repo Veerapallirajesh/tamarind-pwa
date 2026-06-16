@@ -24,9 +24,12 @@ const DASHBOARD = {
 
       <!-- Net Position -->
       <div class="net-card ${netClass}">
-        <div class="nc-label">${netLabel}</div>
-        <div class="nc-value">${Utils.currency(Math.abs(d.netPosition))}</div>
-        <div class="nc-sub">Receivable ${Utils.currency(d.totalReceivable)} &nbsp;|&nbsp; Payable ${Utils.currency(d.totalPayable)}</div>
+        <div class="net-card-left">
+          <div class="nc-label">${netLabel}</div>
+          <div class="nc-value">${Utils.currency(Math.abs(d.netPosition))}</div>
+          <div class="nc-sub">Receivable ${Utils.currency(d.totalReceivable)} &nbsp;·&nbsp; Payable ${Utils.currency(d.totalPayable)}</div>
+        </div>
+        <div class="net-card-badge">${d.netPosition >= 0 ? 'Healthy' : 'Attention'}</div>
       </div>
 
       <!-- Financial Overview -->
