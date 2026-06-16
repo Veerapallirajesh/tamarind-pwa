@@ -234,7 +234,7 @@ const DB = {
     const sb  = await getClient();
     const uid = await this.userId();
 
-    /* 1 — Insert the payment row */
+    /* 1 — Insert payment row */
     const { data: payment, error: pErr } = await sb.from('payments').insert({
       user_id: uid,
       purchase_id: purchase_id || null,
@@ -244,23 +244,40 @@ const DB = {
     }).select().single();
     if (pErr) throw pErr;
 
-    /* 2 — Re-sum all payments and update the parent record */
+    /* 2 — Re-sum ALL payments for this record, then update BOTH paid_amount AND pending */
     if (purchase_id) {
-      const payments = await this.getPayments({ purchase_id });
-      const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
+      const allPayments = await this.getPayments({ purchase_id });
+      const totalPaid   = allPayments.reduce((s, p) => s + (p.amount || 0), 0);
+
+      /* Fetch the purchase total so we can compute pending correctly */
+      const { data: purchase, error: fErr } = await sb
+        .from('purchases').select('total').eq('id', purchase_id).single();
+      if (fErr) throw fErr;
+
+      const pending = Math.max(0, (purchase.total || 0) - totalPaid);
       const { error: uErr } = await sb.from('purchases')
-        .update({ paid_amount: totalPaid })
+        .update({ paid_amount: totalPaid, pending })
         .eq('id', purchase_id);
       if (uErr) throw uErr;
     }
+
     if (sale_id) {
-      const payments = await this.getPayments({ sale_id });
-      const totalReceived = payments.reduce((s, p) => s + (p.amount || 0), 0);
+      const allPayments    = await this.getPayments({ sale_id });
+      const totalReceived  = allPayments.reduce((s, p) => s + (p.amount || 0), 0);
+
+      const { data: sale, error: fErr } = await sb
+        .from('sales').select('total').eq('id', sale_id).single();
+      if (fErr) throw fErr;
+
+      const pending = Math.max(0, (sale.total || 0) - totalReceived);
       const { error: uErr } = await sb.from('sales')
-        .update({ received_amount: totalReceived })
+        .update({ received_amount: totalReceived, pending })
         .eq('id', sale_id);
       if (uErr) throw uErr;
     }
+
+    return payment;
+  },
 
     return payment;
   },

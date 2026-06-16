@@ -33,7 +33,35 @@ const Utils = {
     return new Date(due) < new Date(new Date().toDateString());
   },
 
-  /* Status string */
+  /* Days until due: negative = overdue, 0 = today, positive = days left */
+  daysUntilDue(due) {
+    if (!due) return null;
+    const today  = new Date(new Date().toDateString());
+    const dueDay = new Date(due);
+    return Math.round((dueDay - today) / 86400000);
+  },
+
+  /* Due label HTML: "Overdue 3d" | "Due today" | "3d left" | "" */
+  dueLabel(due, pending) {
+    if (!due || pending <= 0) return '';
+    const d = this.daysUntilDue(due);
+    if (d === null) return '';
+    if (d < 0)  return `<span style="color:var(--danger);font-size:12px;font-weight:600">Overdue ${Math.abs(d)}d</span>`;
+    if (d === 0) return `<span style="color:var(--danger);font-size:12px;font-weight:600">Due today</span>`;
+    if (d <= 7)  return `<span style="color:var(--warning);font-size:12px;font-weight:600">${d}d left</span>`;
+    return `<span style="color:var(--text-muted);font-size:12px">${d}d left</span>`;
+  },
+
+  /* Compute live pending from record — uses paid_amount/received_amount as fallback */
+  livePending(r) {
+    const total = r.total || 0;
+    const paid  = r.paid_amount ?? r.received_amount ?? 0;
+    // If the DB pending column is stale (> total), recompute from paid amounts
+    const dbPending = r.pending ?? (total - paid);
+    return Math.max(0, dbPending);
+  },
+
+  /* Status string — uses livePending to avoid stale DB values */
   status(pending, due) {
     if (pending <= 0) return 'paid';
     if (this.isOverdue(due, pending)) return 'overdue';

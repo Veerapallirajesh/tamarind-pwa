@@ -76,30 +76,35 @@ const LISTS = {
 
   _filteredData() {
     if (this._type === 'expenses' || this._filterStatus === 'all') return this._data;
-    return this._data.filter(r => Utils.status(r.pending, r.due_date) === this._filterStatus);
+    return this._data.filter(r => {
+      const pending = Utils.livePending(r);
+      return Utils.status(pending, r.due_date) === this._filterStatus;
+    });
   },
 
   _txnRow(r) {
     const name      = r.parties?.name || 'Unknown';
-    const pending   = r.pending || 0;
+    const pending   = Utils.livePending(r);          // use live calc, not stale DB value
     const statusCls = Utils.status(pending, r.due_date);
     const isBuy     = this._type === 'purchases';
     const detail    = isBuy
       ? (r.material || 'Seeds') + ' · ' + (r.quantity || 0) + ' kg'
       : (r.product || '') + ' · ' + (r.actual_quantity || 0) + ' kg';
     const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const dueHtml   = pending > 0 ? Utils.dueLabel(r.due_date, pending) : '';
     return `
       <div class="list-item ${statusCls}" onclick="LISTS.viewDetail('${r.id}')">
         <div class="li-avatar ${isBuy ? 'purchase' : 'sale'}">${initials}</div>
         <div class="li-body">
           <div class="li-name">${Utils.esc(name)}</div>
           <div class="li-sub">${Utils.esc(detail)} · ${Utils.dateDisplay(r.created_at?.slice(0,10))}</div>
+          ${dueHtml ? `<div style="margin-top:2px">${dueHtml}</div>` : ''}
         </div>
         <div class="li-right">
           <div class="li-amount">${Utils.currency(r.total)}</div>
           ${pending > 0
             ? `<div class="li-${statusCls}">${Utils.currency(pending)} due</div>`
-            : '<div class="li-sub" style="color:var(--success);font-weight:600">Paid</div>'}
+            : '<div style="color:var(--success);font-size:12px;font-weight:600">Paid</div>'}
         </div>
       </div>`;
   },
@@ -166,7 +171,7 @@ const LISTS = {
     const isExpense = this._type === 'expenses';
     const type      = this._type;
     const name      = r.parties?.name || r.category || 'Unknown';
-    const pending   = r.pending || 0;
+    const pending   = Utils.livePending(r);   // live calc, never stale
     let details     = '';
 
     if (isExpense) {
@@ -190,7 +195,11 @@ const LISTS = {
         <div class="form-group"><label>Amount Paid</label><input readonly value="${Utils.currency(r.paid_amount)}" /></div>
         <div class="form-group"><label>Pending</label>
           <input readonly value="${Utils.currency(pending)}" style="color:${pending > 0 ? 'var(--warning)' : 'var(--success)'}; font-weight:700" /></div>
-        ${r.due_date ? `<div class="form-group"><label>Due Date</label><input readonly value="${Utils.dateDisplay(r.due_date)}" /></div>` : ''}
+        ${r.due_date ? `
+          <div class="form-group"><label>Due Date</label>
+            <input readonly value="${Utils.dateDisplay(r.due_date)}" />
+            <div style="margin-top:6px">${Utils.dueLabel(r.due_date, pending)}</div>
+          </div>` : ''}
         <div class="form-group"><label>Status</label><div style="padding:6px 0">${Utils.badge(pending, r.due_date)}</div></div>
         ${r.notes ? `<div class="form-group"><label>Notes</label><textarea readonly>${Utils.esc(r.notes)}</textarea></div>` : ''}`;
 
@@ -209,7 +218,11 @@ const LISTS = {
         <div class="form-group"><label>Amount Received</label><input readonly value="${Utils.currency(r.received_amount)}" /></div>
         <div class="form-group"><label>Pending</label>
           <input readonly value="${Utils.currency(pending)}" style="color:${pending > 0 ? 'var(--warning)' : 'var(--success)'}; font-weight:700" /></div>
-        ${r.due_date ? `<div class="form-group"><label>Due Date</label><input readonly value="${Utils.dateDisplay(r.due_date)}" /></div>` : ''}
+        ${r.due_date ? `
+          <div class="form-group"><label>Due Date</label>
+            <input readonly value="${Utils.dateDisplay(r.due_date)}" />
+            <div style="margin-top:6px">${Utils.dueLabel(r.due_date, pending)}</div>
+          </div>` : ''}
         <div class="form-group"><label>Status</label><div style="padding:6px 0">${Utils.badge(pending, r.due_date)}</div></div>
         ${r.notes ? `<div class="form-group"><label>Notes</label><textarea readonly>${Utils.esc(r.notes)}</textarea></div>` : ''}`;
     }
