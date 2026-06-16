@@ -185,28 +185,43 @@ const PARTIES = {
 
   _ledgerHtml(party, txns) {
     let balance = 0, totalDebit = 0, totalCredit = 0;
+
     const rows = txns.map(t => {
-      let debit = 0, credit = 0, label = '';
-      if (party.type === 'supplier') {
-        if (t._type === 'purchase') { debit = t.total; label = `Purchase · ${t.material || 'Seeds'}`; }
-        credit = t._type === 'purchase' ? (t.paid_amount || 0) : 0;
+      let debit = 0, credit = 0, label = '', statusHtml = '';
+
+      if (t._type === 'payment') {
+        /* Payment rows are always credits (money going out to supplier / coming in from customer) */
+        credit = t.amount || 0;
+        label  = 'Payment' + (t.notes ? ` · ${t.notes}` : '');
+      } else if (party.type === 'supplier') {
+        if (t._type === 'purchase') {
+          debit  = t.total || 0;
+          label  = `Purchase · ${t.material || 'Seeds'}`;
+          statusHtml = Utils.badge(t.pending || 0, t.due_date);
+        }
       } else {
-        if (t._type === 'sale') { credit = t.total; label = `Sale · ${t.product || ''}`; }
-        debit = t._type === 'sale' ? (t.received_amount || 0) : 0;
+        if (t._type === 'sale') {
+          credit = t.total || 0;
+          label  = `Sale · ${t.product || ''}`;
+          statusHtml = Utils.badge(t.pending || 0, t.due_date);
+        }
       }
+
       balance = party.type === 'supplier'
         ? balance + debit - credit
         : balance + credit - debit;
+
       totalDebit  += debit;
       totalCredit += credit;
+
       return `
         <tr>
           <td>${Utils.dateDisplay(t.date)}</td>
-          <td>${Utils.esc(label || t._type)}</td>
-          <td class="debit">${debit > 0 ? Utils.currency(debit) : '—'}</td>
+          <td>${Utils.esc(label)}</td>
+          <td class="debit">${debit  > 0 ? Utils.currency(debit)  : '—'}</td>
           <td class="credit">${credit > 0 ? Utils.currency(credit) : '—'}</td>
           <td class="balance">${Utils.currency(Math.abs(balance))}</td>
-          <td>${Utils.badge(t.pending || 0, t.due_date)}</td>
+          <td>${statusHtml}</td>
         </tr>`;
     }).join('');
 

@@ -114,8 +114,29 @@ create policy "sales_own"     on sales     for all using (auth.uid() = user_id) 
 create policy "expenses_own"  on expenses  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ============================================================
--- INDEXES
+-- PAYMENTS  (tracks individual payment instalments)
 -- ============================================================
+create table if not exists payments (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  purchase_id uuid references purchases(id) on delete cascade,
+  sale_id     uuid references sales(id)     on delete cascade,
+  amount      numeric(12,2) not null,
+  notes       text,
+  created_at  timestamptz default now()
+);
+
+alter table payments enable row level security;
+drop policy if exists "payments_own" on payments;
+create policy "payments_own" on payments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create index if not exists idx_payments_purchase on payments(purchase_id);
+create index if not exists idx_payments_sale     on payments(sale_id);
+create index if not exists idx_payments_user     on payments(user_id);
+
+-- pending column (computed on save, kept for fast queries)
+alter table purchases add column if not exists pending numeric(12,2) default 0;
+alter table sales     add column if not exists pending numeric(12,2) default 0;
 create index if not exists idx_parties_user   on parties(user_id);
 create index if not exists idx_purchases_user on purchases(user_id);
 create index if not exists idx_purchases_date on purchases(created_at);
