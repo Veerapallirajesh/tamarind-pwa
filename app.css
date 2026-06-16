@@ -537,6 +537,7 @@ html, body {
 }
 .list-item:active { box-shadow: none; background: var(--surface-2); }
 .list-item.overdue { border-left-color: var(--danger); }
+.list-item.partial { border-left-color: #2563EB; }
 .list-item.paid    { border-left-color: var(--success); }
 .list-item.pending { border-left-color: var(--warning); }
 
@@ -569,9 +570,10 @@ html, body {
   padding: 2px 8px; border-radius: 20px;
   text-transform: uppercase; letter-spacing: 0.4px;
 }
-.badge-paid    { background: #DCFCE7; color: #15803D; }
-.badge-pending { background: #FEF3C7; color: #B45309; }
-.badge-overdue { background: #FEE2E2; color: #B91C1C; }
+.badge-paid     { background: #DCFCE7; color: #15803D; }
+.badge-partial  { background: #EFF6FF; color: #1D4ED8; }
+.badge-pending  { background: #FEF3C7; color: #B45309; }
+.badge-overdue  { background: #FEE2E2; color: #B91C1C; }
 
 /* ── Search ──────────────────────────────────────────────────── */
 .search-bar { display: flex; gap: 8px; margin-bottom: 12px; }

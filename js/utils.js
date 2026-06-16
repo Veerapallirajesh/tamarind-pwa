@@ -52,27 +52,53 @@ const Utils = {
     return `<span style="color:var(--text-muted);font-size:12px">${d}d left</span>`;
   },
 
-  /* Compute live pending from record — uses paid_amount/received_amount as fallback */
+  /* Compute live pending from record */
   livePending(r) {
     const total = r.total || 0;
     const paid  = r.paid_amount ?? r.received_amount ?? 0;
-    // If the DB pending column is stale (> total), recompute from paid amounts
     const dbPending = r.pending ?? (total - paid);
     return Math.max(0, dbPending);
   },
 
-  /* Status string — uses livePending to avoid stale DB values */
-  status(pending, due) {
+  /* Paid amount from record (purchase or sale) */
+  livePaid(r) {
+    return r.paid_amount ?? r.received_amount ?? 0;
+  },
+
+  /*
+   * Status: 'paid' | 'partial' | 'overdue' | 'pending'
+   * partial = some payment made but not fully settled
+   */
+  status(pending, due, r) {
     if (pending <= 0) return 'paid';
+    // partial: any payment made
+    if (r && this.livePaid(r) > 0) return 'partial';
     if (this.isOverdue(due, pending)) return 'overdue';
     return 'pending';
   },
 
-  /* Status badge HTML */
-  badge(pending, due) {
-    const s = this.status(pending, due);
-    const labels = { paid: 'Paid', pending: 'Pending', overdue: 'Overdue' };
+  /* Badge HTML — includes partial */
+  badge(pending, due, r) {
+    const s = this.status(pending, due, r);
+    const labels = { paid: 'Paid', partial: 'Partial', pending: 'Pending', overdue: 'Overdue' };
     return `<span class="badge badge-${s}">${labels[s]}</span>`;
+  },
+
+  /* Payment progress bar HTML (0-100%) */
+  progressBar(paid, total) {
+    if (!total || total <= 0) return '';
+    const pct = Math.min(100, Math.round((paid / total) * 100));
+    const colour = pct >= 100 ? 'var(--success)' : pct > 0 ? 'var(--accent)' : 'var(--border)';
+    return `
+      <div style="margin-top:6px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px">
+          <span>${pct}% paid</span>
+          <span>${Utils.currency(paid)} / ${Utils.currency(total)}</span>
+        </div>
+        <div style="height:5px;background:var(--surface-2);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${colour};border-radius:4px;transition:width 0.4s"></div>
+        </div>
+      </div>`;
   },
 
   /* Show toast */

@@ -40,11 +40,12 @@ const LISTS = {
          </div>`;
 
     const statusBar = isExpense ? '' : `
-      <div class="tab-bar">
-        <button class="tab-btn ${this._filterStatus==='all'?'active':''}"     onclick="LISTS.setStatusFilter('all')">All</button>
-        <button class="tab-btn ${this._filterStatus==='pending'?'active':''}" onclick="LISTS.setStatusFilter('pending')">Pending</button>
-        <button class="tab-btn ${this._filterStatus==='overdue'?'active':''}" onclick="LISTS.setStatusFilter('overdue')">Overdue</button>
-        <button class="tab-btn ${this._filterStatus==='paid'?'active':''}"    onclick="LISTS.setStatusFilter('paid')">Paid</button>
+      <div class="tab-bar" style="overflow-x:auto;flex-wrap:nowrap">
+        <button class="tab-btn ${this._filterStatus==='all'?'active':''}"      onclick="LISTS.setStatusFilter('all')">All</button>
+        <button class="tab-btn ${this._filterStatus==='pending'?'active':''}"  onclick="LISTS.setStatusFilter('pending')">Pending</button>
+        <button class="tab-btn ${this._filterStatus==='partial'?'active':''}"  onclick="LISTS.setStatusFilter('partial')">Partial</button>
+        <button class="tab-btn ${this._filterStatus==='overdue'?'active':''}"  onclick="LISTS.setStatusFilter('overdue')">Overdue</button>
+        <button class="tab-btn ${this._filterStatus==='paid'?'active':''}"     onclick="LISTS.setStatusFilter('paid')">Paid</button>
       </div>`;
 
     const totalAmt = this._data.reduce((s, r) => s + (r.total || r.amount || 0), 0);
@@ -78,20 +79,43 @@ const LISTS = {
     if (this._type === 'expenses' || this._filterStatus === 'all') return this._data;
     return this._data.filter(r => {
       const pending = Utils.livePending(r);
-      return Utils.status(pending, r.due_date) === this._filterStatus;
+      const paid    = Utils.livePaid(r);
+      const total   = r.total || 0;
+      if (this._filterStatus === 'paid')    return pending <= 0;
+      if (this._filterStatus === 'partial') return paid > 0 && pending > 0;
+      if (this._filterStatus === 'pending') return paid <= 0 && pending > 0 && !Utils.isOverdue(r.due_date, pending);
+      if (this._filterStatus === 'overdue') return Utils.isOverdue(r.due_date, pending);
+      return true;
     });
   },
 
   _txnRow(r) {
     const name      = r.parties?.name || 'Unknown';
-    const pending   = Utils.livePending(r);          // use live calc, not stale DB value
-    const statusCls = Utils.status(pending, r.due_date);
+    const total     = r.total || 0;
+    const paid      = Utils.livePaid(r);
+    const pending   = Utils.livePending(r);
+    const statusCls = Utils.status(pending, r.due_date, r);
     const isBuy     = this._type === 'purchases';
     const detail    = isBuy
       ? (r.material || 'Seeds') + ' · ' + (r.quantity || 0) + ' kg'
       : (r.product || '') + ' · ' + (r.actual_quantity || 0) + ' kg';
     const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     const dueHtml   = pending > 0 ? Utils.dueLabel(r.due_date, pending) : '';
+
+    /* Payment info block — shows Total / Paid / Pending for partially paid */
+    let payInfo;
+    if (pending <= 0) {
+      payInfo = `<div style="color:var(--success);font-size:12px;font-weight:600;margin-top:2px">Fully Paid</div>`;
+    } else if (paid > 0) {
+      payInfo = `
+        <div style="font-size:12px;margin-top:3px;line-height:1.6">
+          <span style="color:var(--text-muted)">Paid </span><span style="font-weight:600;color:var(--success)">${Utils.currency(paid)}</span>
+          <span style="color:var(--text-muted)"> · Due </span><span style="font-weight:600;color:var(--warning)">${Utils.currency(pending)}</span>
+        </div>`;
+    } else {
+      payInfo = `<div class="li-${statusCls}" style="margin-top:2px">${Utils.currency(pending)} due</div>`;
+    }
+
     return `
       <div class="list-item ${statusCls}" onclick="LISTS.viewDetail('${r.id}')">
         <div class="li-avatar ${isBuy ? 'purchase' : 'sale'}">${initials}</div>
@@ -101,12 +125,11 @@ const LISTS = {
           ${dueHtml ? `<div style="margin-top:2px">${dueHtml}</div>` : ''}
         </div>
         <div class="li-right">
-          <div class="li-amount">${Utils.currency(r.total)}</div>
-          ${pending > 0
-            ? `<div class="li-${statusCls}">${Utils.currency(pending)} due</div>`
-            : '<div style="color:var(--success);font-size:12px;font-weight:600">Paid</div>'}
+          <div class="li-amount">${Utils.currency(total)}</div>
+          ${payInfo}
         </div>
-      </div>`;
+      </div>
+      ${paid > 0 && pending > 0 ? Utils.progressBar(paid, total) : ''}`;
   },
 
   _expenseRow(r) {
@@ -129,7 +152,7 @@ const LISTS = {
   setStatusFilter(f) {
     this._filterStatus = f;
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
-      b.classList.toggle('active', ['all','pending','overdue','paid'][i] === f);
+      b.classList.toggle('active', ['all','pending','partial','overdue','paid'][i] === f);
     });
     const rows = this._filteredData();
     const isExpense = this._type === 'expenses';
@@ -171,7 +194,9 @@ const LISTS = {
     const isExpense = this._type === 'expenses';
     const type      = this._type;
     const name      = r.parties?.name || r.category || 'Unknown';
-    const pending   = Utils.livePending(r);   // live calc, never stale
+    const pending   = Utils.livePending(r);
+    const paid      = Utils.livePaid(r);
+    const total     = r.total || 0;
     let details     = '';
 
     if (isExpense) {
@@ -195,12 +220,13 @@ const LISTS = {
         <div class="form-group"><label>Amount Paid</label><input readonly value="${Utils.currency(r.paid_amount)}" /></div>
         <div class="form-group"><label>Pending</label>
           <input readonly value="${Utils.currency(pending)}" style="color:${pending > 0 ? 'var(--warning)' : 'var(--success)'}; font-weight:700" /></div>
+        ${paid > 0 && pending > 0 ? `<div class="form-group">${Utils.progressBar(paid, total)}</div>` : ''}
         ${r.due_date ? `
           <div class="form-group"><label>Due Date</label>
             <input readonly value="${Utils.dateDisplay(r.due_date)}" />
             <div style="margin-top:6px">${Utils.dueLabel(r.due_date, pending)}</div>
           </div>` : ''}
-        <div class="form-group"><label>Status</label><div style="padding:6px 0">${Utils.badge(pending, r.due_date)}</div></div>
+        <div class="form-group"><label>Status</label><div style="padding:6px 0">${Utils.badge(pending, r.due_date, r)}</div></div>
         ${r.notes ? `<div class="form-group"><label>Notes</label><textarea readonly>${Utils.esc(r.notes)}</textarea></div>` : ''}`;
 
     } else {
@@ -218,12 +244,13 @@ const LISTS = {
         <div class="form-group"><label>Amount Received</label><input readonly value="${Utils.currency(r.received_amount)}" /></div>
         <div class="form-group"><label>Pending</label>
           <input readonly value="${Utils.currency(pending)}" style="color:${pending > 0 ? 'var(--warning)' : 'var(--success)'}; font-weight:700" /></div>
+        ${paid > 0 && pending > 0 ? `<div class="form-group">${Utils.progressBar(paid, total)}</div>` : ''}
         ${r.due_date ? `
           <div class="form-group"><label>Due Date</label>
             <input readonly value="${Utils.dateDisplay(r.due_date)}" />
             <div style="margin-top:6px">${Utils.dueLabel(r.due_date, pending)}</div>
           </div>` : ''}
-        <div class="form-group"><label>Status</label><div style="padding:6px 0">${Utils.badge(pending, r.due_date)}</div></div>
+        <div class="form-group"><label>Status</label><div style="padding:6px 0">${Utils.badge(pending, r.due_date, r)}</div></div>
         ${r.notes ? `<div class="form-group"><label>Notes</label><textarea readonly>${Utils.esc(r.notes)}</textarea></div>` : ''}`;
     }
 
@@ -250,7 +277,7 @@ const LISTS = {
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <div style="font-size:17px;font-weight:700">${Utils.esc(name)}</div>
-          <div>${isExpense ? '' : Utils.badge(pending, r.due_date)}</div>
+          <div>${isExpense ? '' : Utils.badge(pending, r.due_date, r)}</div>
         </div>
         ${details}
         <div class="btn-row" style="margin-top:14px">
