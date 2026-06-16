@@ -7,7 +7,7 @@
    - Everything else: network-first with cache fallback
    ============================================================ */
 
-const CACHE_VERSION = 'tmr-v8';
+const CACHE_VERSION = 'tmr-v9';
 const SHELL_ASSETS  = [
   '/',
   '/index.html',
@@ -74,9 +74,10 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // JS / CSS: stale-while-revalidate — fast and always updating in background
+  // JS / CSS: network-first so code updates are always immediate
+  // Falls back to cache only when offline
   if (url.pathname.match(/\.(js|css)$/)) {
-    e.respondWith(staleWhileRevalidate(request));
+    e.respondWith(networkFirst(request));
     return;
   }
 
