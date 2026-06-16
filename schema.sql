@@ -81,12 +81,32 @@ create table if not exists expenses (
 );
 
 -- ============================================================
+-- NEW COLUMNS (safe to run even if tables already exist from v1)
+-- ============================================================
+alter table purchases add column if not exists material    text default 'Tamarind Seeds';
+alter table purchases add column if not exists subtotal    numeric(12,2) default 0;
+alter table purchases add column if not exists tax_pct     numeric(5,2)  default 5;
+alter table purchases add column if not exists tax_amount  numeric(12,2) default 0;
+
+alter table sales add column if not exists expected_quantity numeric(12,3) default 0;
+alter table sales add column if not exists actual_quantity   numeric(12,3) default 0;
+alter table sales add column if not exists loss_quantity     numeric(12,3) default 0;
+
+alter table expenses add column if not exists sub_category text;
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 alter table parties   enable row level security;
 alter table purchases enable row level security;
 alter table sales     enable row level security;
 alter table expenses  enable row level security;
+
+-- Drop old policies first so we can recreate safely
+drop policy if exists "parties_own"   on parties;
+drop policy if exists "purchases_own" on purchases;
+drop policy if exists "sales_own"     on sales;
+drop policy if exists "expenses_own"  on expenses;
 
 create policy "parties_own"   on parties   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "purchases_own" on purchases for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
