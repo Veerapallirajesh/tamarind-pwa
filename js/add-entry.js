@@ -298,7 +298,9 @@ const ADD_ENTRY = {
     const paid     = parseFloat(document.getElementById('paid').value) || 0;
     const due      = document.getElementById('due-date').value;
     const notes    = document.getElementById('notes').value.trim();
-    const editId   = document.getElementById('edit-id').value;
+    // Use _editData.id as primary source; hidden field as fallback
+    const editId   = this._editData?.id || document.getElementById('edit-id').value || null;
+    console.log('[ADD_ENTRY] savePurchase editId=', editId, editId ? 'UPDATE' : 'INSERT');
     if (!partyId)  { Utils.toast('Please select a supplier', 'error'); return; }
     if (!material) { Utils.toast('Please select material', 'error'); return; }
     if (qty <= 0)  { Utils.toast('Enter a valid quantity', 'error'); return; }
@@ -319,18 +321,14 @@ const ADD_ENTRY = {
     const recv     = parseFloat(document.getElementById('paid').value) || 0;
     const due      = document.getElementById('due-date').value;
     const notes    = document.getElementById('notes').value.trim();
-    const editId   = document.getElementById('edit-id').value;
-    if (!partyId)  { Utils.toast('Please select a customer', 'error'); return; }
-    if (!product)  { Utils.toast('Please select a product', 'error'); return; }
+    const editId   = this._editData?.id || document.getElementById('edit-id').value || null;
+    console.log('[ADD_ENTRY] saveSale editId=', editId, editId ? 'UPDATE' : 'INSERT');
+    if (!partyId)      { Utils.toast('Please select a customer', 'error'); return; }
+    if (!product)      { Utils.toast('Please select a product', 'error'); return; }
     if (expected <= 0) { Utils.toast('Enter expected quantity', 'error'); return; }
     if (actual <= 0)   { Utils.toast('Enter actual quantity', 'error'); return; }
     if (rate <= 0)     { Utils.toast('Enter a valid rate', 'error'); return; }
-    const rec = {
-      party_id: partyId, product,
-      expected_quantity: expected, actual_quantity: actual,
-      rate, received_amount: recv,
-      due_date: due || null, notes
-    };
+    const rec = { party_id: partyId, product, expected_quantity: expected, actual_quantity: actual, rate, received_amount: recv, due_date: due || null, notes };
     if (editId) rec.id = editId;
     await DB.saveSale(rec);
     Utils.toast(editId ? 'Sale updated!' : 'Sale saved!', 'success');
@@ -343,7 +341,8 @@ const ADD_ENTRY = {
     const amount   = parseFloat(document.getElementById('exp-amount').value) || 0;
     const date     = document.getElementById('exp-date').value;
     const notes    = document.getElementById('notes').value.trim();
-    const editId   = document.getElementById('edit-id').value;
+    const editId   = this._editData?.id || document.getElementById('edit-id').value || null;
+    console.log('[ADD_ENTRY] saveExpense editId=', editId, editId ? 'UPDATE' : 'INSERT');
     if (!category) { Utils.toast('Please select a category', 'error'); return; }
     if (category === 'Labour' && !subCat) { Utils.toast('Please select labour type', 'error'); return; }
     if (amount <= 0){ Utils.toast('Enter a valid amount', 'error'); return; }

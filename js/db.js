@@ -94,22 +94,28 @@ const DB = {
   async savePurchase(rec) {
     const sb = await getClient();
     rec.user_id = await this.userId();
-    // Calculate tax and totals
-    const subtotal   = (rec.quantity || 0) * (rec.rate || 0);
-    const taxPct     = rec.tax_pct != null ? rec.tax_pct : PURCHASE_TAX_PCT;
-    const taxAmount  = subtotal * taxPct / 100;
-    const total      = subtotal + taxAmount;
-    rec.subtotal     = subtotal;
-    rec.tax_pct      = taxPct;
-    rec.tax_amount   = taxAmount;
-    rec.total        = total;
-    rec.pending      = total - (rec.paid_amount || 0);
+    const subtotal  = (rec.quantity || 0) * (rec.rate || 0);
+    const taxPct    = rec.tax_pct != null ? rec.tax_pct : PURCHASE_TAX_PCT;
+    const taxAmount = subtotal * taxPct / 100;
+    rec.subtotal    = subtotal;
+    rec.tax_pct     = taxPct;
+    rec.tax_amount  = taxAmount;
+    rec.total       = subtotal + taxAmount;
+    rec.pending     = rec.total - (rec.paid_amount || 0);
+
     if (rec.id) {
-      const { data, error } = await sb.from('purchases').update(rec).eq('id', rec.id).select().single();
-      if (error) throw error; return data;
+      const id = rec.id;
+      // Strip id and read-only columns from update payload
+      const { id: _id, created_at: _ca, ...payload } = rec;
+      console.log('[DB] UPDATE purchase id=', id, payload);
+      const { data, error } = await sb.from('purchases').update(payload).eq('id', id).select().single();
+      if (error) { console.error('[DB] update error', error); throw error; }
+      return data;
     } else {
+      console.log('[DB] INSERT purchase', rec);
       const { data, error } = await sb.from('purchases').insert(rec).select().single();
-      if (error) throw error; return data;
+      if (error) { console.error('[DB] insert error', error); throw error; }
+      return data;
     }
   },
   async deletePurchase(id) {
@@ -133,17 +139,21 @@ const DB = {
   async saveSale(rec) {
     const sb = await getClient();
     rec.user_id = await this.userId();
-    // loss = expected - actual
     rec.loss_quantity = Math.max(0, (rec.expected_quantity || 0) - (rec.actual_quantity || 0));
-    // total based on actual quantity
     rec.total   = (rec.actual_quantity || 0) * (rec.rate || 0);
     rec.pending = rec.total - (rec.received_amount || 0);
     if (rec.id) {
-      const { data, error } = await sb.from('sales').update(rec).eq('id', rec.id).select().single();
-      if (error) throw error; return data;
+      const id = rec.id;
+      const { id: _id, created_at: _ca, ...payload } = rec;
+      console.log('[DB] UPDATE sale id=', id, payload);
+      const { data, error } = await sb.from('sales').update(payload).eq('id', id).select().single();
+      if (error) { console.error('[DB] update error', error); throw error; }
+      return data;
     } else {
+      console.log('[DB] INSERT sale', rec);
       const { data, error } = await sb.from('sales').insert(rec).select().single();
-      if (error) throw error; return data;
+      if (error) { console.error('[DB] insert error', error); throw error; }
+      return data;
     }
   },
   async deleteSale(id) {
@@ -168,11 +178,17 @@ const DB = {
     const sb = await getClient();
     rec.user_id = await this.userId();
     if (rec.id) {
-      const { data, error } = await sb.from('expenses').update(rec).eq('id', rec.id).select().single();
-      if (error) throw error; return data;
+      const id = rec.id;
+      const { id: _id, created_at: _ca, ...payload } = rec;
+      console.log('[DB] UPDATE expense id=', id, payload);
+      const { data, error } = await sb.from('expenses').update(payload).eq('id', id).select().single();
+      if (error) { console.error('[DB] update error', error); throw error; }
+      return data;
     } else {
+      console.log('[DB] INSERT expense', rec);
       const { data, error } = await sb.from('expenses').insert(rec).select().single();
-      if (error) throw error; return data;
+      if (error) { console.error('[DB] insert error', error); throw error; }
+      return data;
     }
   },
   async deleteExpense(id) {
