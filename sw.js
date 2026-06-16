@@ -7,7 +7,7 @@
    - Everything else: network-first with cache fallback
    ============================================================ */
 
-const CACHE_VERSION = 'tmr-v4';
+const CACHE_VERSION = 'tmr-v5';
 const SHELL_ASSETS  = [
   '/',
   '/index.html',

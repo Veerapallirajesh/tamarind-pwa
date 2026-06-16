@@ -8,6 +8,7 @@ const ADD_ENTRY = {
   _suppliers: [],
   _customers: [],
   _editData: null,
+  _saving: false,   // guard against double-tap
 
   async render(params = {}) {
     const el = document.getElementById('page-container');
@@ -281,12 +282,19 @@ const ADD_ENTRY = {
 
   /* ---- SAVE ---- */
   async save() {
+    if (this._saving) return;           // block double-tap
+    this._saving = true;
+    const btn = document.querySelector('#form-area .btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
     try {
       if (this._type === 'purchase')      await this._savePurchase();
       else if (this._type === 'sale')     await this._saveSale();
       else                                await this._saveExpense();
     } catch (e) {
       Utils.toast('Error: ' + e.message, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || 'Save'; }
+    } finally {
+      this._saving = false;
     }
   },
 
