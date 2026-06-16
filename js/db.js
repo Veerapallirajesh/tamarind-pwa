@@ -213,6 +213,23 @@ const DB = {
     return data || [];
   },
 
+  /* Fetch ALL payments with party name resolved via the parent purchase/sale */
+  async getAllPayments() {
+    const sb = await getClient();
+    const { data, error } = await sb.from('payments')
+      .select(`
+        *,
+        purchases ( party_id, parties ( name ) ),
+        sales     ( party_id, parties ( name ) )
+      `)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(p => ({
+      ...p,
+      _party_name: p.purchases?.parties?.name || p.sales?.parties?.name || '—'
+    }));
+  },
+
   async addPayment({ purchase_id, sale_id, amount, notes }) {
     const sb  = await getClient();
     const uid = await this.userId();

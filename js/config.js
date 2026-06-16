@@ -5,7 +5,7 @@ const SUPABASE_URL = 'https://jnmqjncqwuwfozouynng.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ouGlT_4McuuX-iGoqDqLig_3p-9DH_m';
 
 // Raw material for purchase
-const RAW_MATERIALS = ['Tamarind Seeds'];
+const RAW_MATERIALS = ['Tamarind Seeds', 'Other'];
 
 // Finished products for sales
 const PRODUCTS = ['Tamarind Dhal', 'Tamarind Husk', 'PVC', 'Waste Tamarind'];

@@ -101,9 +101,13 @@ const ADD_ENTRY = {
         </div>
         <div class="form-group">
           <label>Material</label>
-          <select id="material">
+          <select id="material" onchange="ADD_ENTRY._toggleCustomMaterial()">
             ${materialOpts}
           </select>
+        </div>
+        <div class="form-group" id="custom-material-group" style="display:none">
+          <label>Enter Material Name *</label>
+          <input type="text" id="custom-material" placeholder="e.g. Tamarind Powder, Pulp..." />
         </div>
         <div class="form-group">
           <label>Quantity (kg) *</label>
@@ -274,6 +278,20 @@ const ADD_ENTRY = {
     return total;
   },
 
+  _toggleCustomMaterial() {
+    const val   = document.getElementById('material')?.value;
+    const group = document.getElementById('custom-material-group');
+    if (group) group.style.display = val === 'Other' ? 'block' : 'none';
+  },
+
+  _resolveMaterial() {
+    const sel = document.getElementById('material')?.value || 'Tamarind Seeds';
+    if (sel === 'Other') {
+      return (document.getElementById('custom-material')?.value.trim()) || 'Other';
+    }
+    return sel;
+  },
+
   _toggleLabourSubcat() {
     const cat   = document.getElementById('category')?.value;
     const group = document.getElementById('subcat-group');
@@ -300,17 +318,16 @@ const ADD_ENTRY = {
 
   async _savePurchase() {
     const partyId  = document.getElementById('party-id').value;
-    const material = document.getElementById('material').value;
+    const material = this._resolveMaterial();
     const qty      = parseFloat(document.getElementById('qty').value) || 0;
     const rate     = parseFloat(document.getElementById('rate').value) || 0;
     const paid     = parseFloat(document.getElementById('paid').value) || 0;
     const due      = document.getElementById('due-date').value;
     const notes    = document.getElementById('notes').value.trim();
-    // Use _editData.id as primary source; hidden field as fallback
     const editId   = this._editData?.id || document.getElementById('edit-id').value || null;
     console.log('[ADD_ENTRY] savePurchase editId=', editId, editId ? 'UPDATE' : 'INSERT');
     if (!partyId)  { Utils.toast('Please select a supplier', 'error'); return; }
-    if (!material) { Utils.toast('Please select material', 'error'); return; }
+    if (!material || material === 'Other') { Utils.toast('Please enter the material name', 'error'); return; }
     if (qty <= 0)  { Utils.toast('Enter a valid quantity', 'error'); return; }
     if (rate <= 0) { Utils.toast('Enter a valid rate', 'error'); return; }
     const rec = { party_id: partyId, material, quantity: qty, rate, paid_amount: paid, due_date: due || null, notes };
@@ -373,7 +390,15 @@ const ADD_ENTRY = {
       this._setVal('notes', data.notes);
     } else if (type === 'purchase') {
       this._setVal('party-id', data.party_id);
-      this._setVal('material', data.material || 'Tamarind Seeds');
+      // If saved material isn't in the standard list, show it as "Other"
+      const isStandard = RAW_MATERIALS.filter(m => m !== 'Other').includes(data.material);
+      if (isStandard || !data.material) {
+        this._setVal('material', data.material || 'Tamarind Seeds');
+      } else {
+        this._setVal('material', 'Other');
+        this._toggleCustomMaterial();
+        this._setVal('custom-material', data.material);
+      }
       this._setVal('qty', data.quantity);
       this._setVal('rate', data.rate);
       this._setVal('paid', data.paid_amount);

@@ -11,6 +11,7 @@ const NAV = {
     purchases:   ()       => LISTS.render('purchases'),
     sales:       ()       => LISTS.render('sales'),
     expenses:    ()       => LISTS.render('expenses'),
+    payments:    ()       => PAYMENTS_PAGE.render(),
     reports:     ()       => REPORTS.render()
   },
   _titles: {
@@ -20,6 +21,7 @@ const NAV = {
     purchases:   'Purchases',
     sales:       'Sales',
     expenses:    'Expenses',
+    payments:    'Payments',
     reports:     'Reports'
   },
 
