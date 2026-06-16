@@ -58,7 +58,7 @@ const Utils = {
   },
 
   /* Show a simple confirm dialog. Returns Promise<bool> */
-  confirm(title, msg) {
+  confirm(title, msg, confirmLabel = 'Delete', danger = true) {
     return new Promise(resolve => {
       let dlg = document.getElementById('confirm-dialog');
       if (!dlg) {
@@ -70,17 +70,19 @@ const Utils = {
             <h3 id="confirm-title"></h3>
             <p id="confirm-msg"></p>
             <div class="btn-row">
-              <button class="btn btn-outline" id="confirm-no">Cancel</button>
-              <button class="btn btn-danger" id="confirm-yes">Delete</button>
+              <button class="btn btn-ghost" id="confirm-no">Cancel</button>
+              <button class="btn" id="confirm-yes"></button>
             </div>
           </div>`;
         document.body.appendChild(dlg);
       }
       document.getElementById('confirm-title').textContent = title;
       document.getElementById('confirm-msg').textContent = msg;
-      dlg.classList.add('show');
       const yes = document.getElementById('confirm-yes');
-      const no  = document.getElementById('confirm-no');
+      yes.textContent = confirmLabel;
+      yes.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
+      dlg.classList.add('show');
+      const no = document.getElementById('confirm-no');
       const cleanup = val => { dlg.classList.remove('show'); resolve(val); };
       yes.onclick = () => cleanup(true);
       no.onclick  = () => cleanup(false);

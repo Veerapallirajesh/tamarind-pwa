@@ -66,7 +66,7 @@ const AUTH = {
   },
 
   async logout() {
-    if (!await Utils.confirm('Logout', 'Are you sure you want to logout?')) return;
+    if (!await Utils.confirm('Log Out', 'Are you sure you want to log out?', 'Log Out', false)) return;
     await DB.signOut();
     this._user = null;
     sessionStorage.removeItem(SESSION_KEY);
