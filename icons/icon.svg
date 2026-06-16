@@ -1,5 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <rect width="192" height="192" rx="40" fill="#8B4513"/>
-  <text x="96" y="130" font-size="110" text-anchor="middle" font-family="Apple Color Emoji,Segoe UI Emoji,sans-serif">🌿</text>
-  <text x="96" y="175" font-size="20" text-anchor="middle" fill="white" font-family="-apple-system,Helvetica,sans-serif" font-weight="bold">TAMARIND</text>
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="#2E7D32"/>
+  <!-- Ganesha outline in white -->
+  <g transform="translate(28, 18) scale(0.68)" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="100" cy="80" rx="38" ry="42"/>
+    <ellipse cx="76" cy="58" rx="14" ry="18"/>
+    <ellipse cx="124" cy="58" rx="14" ry="18"/>
+    <path d="M68 95 Q55 130 60 160 Q80 185 100 188 Q120 185 140 160 Q145 130 132 95"/>
+    <path d="M85 130 Q100 145 115 130"/>
+    <circle cx="88" cy="80" r="5" fill="white" stroke="none"/>
+    <circle cx="112" cy="80" r="5" fill="white" stroke="none"/>
+    <path d="M100 100 Q90 120 85 145"/>
+    <path d="M85 145 Q78 150 80 158 Q90 165 96 158"/>
+    <path d="M62 95 Q45 80 42 60 Q40 40 55 38 Q68 36 72 52"/>
+    <path d="M138 95 Q155 80 158 60 Q160 40 145 38 Q132 36 128 52"/>
+    <path d="M68 110 Q45 120 38 145"/>
+    <path d="M132 110 Q155 120 162 145"/>
+    <circle cx="100" cy="68" r="3.5" fill="white" stroke="none"/>
+  </g>
+  <!-- App name -->
+  <text x="96" y="182" font-size="14" text-anchor="middle" fill="white" font-family="-apple-system,Helvetica,sans-serif" font-weight="700" letter-spacing="1">TAMARIND</text>
 </svg>

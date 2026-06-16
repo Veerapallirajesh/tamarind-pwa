@@ -1,8 +1,18 @@
-const CACHE_NAME = 'tamarind-pwa-v1';
-const ASSETS = [
+/* ============================================================
+   sw.js — Service Worker
+   Strategy:
+   - HTML:        network-first (so new deploys load immediately)
+   - JS/CSS:      stale-while-revalidate (fast load + background update)
+   - Supabase:    network-only (never cache live data)
+   - Everything else: network-first with cache fallback
+   ============================================================ */
+
+const CACHE_VERSION = 'tmr-v3';
+const SHELL_ASSETS  = [
   '/',
   '/index.html',
   '/app.css',
+  '/manifest.json',
   '/js/config.js',
   '/js/utils.js',
   '/js/db.js',
@@ -15,32 +25,84 @@ const ASSETS = [
   '/js/reports.js'
 ];
 
+/* ---- INSTALL: pre-cache shell ---- */
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_VERSION)
+      .then(cache => cache.addAll(SHELL_ASSETS))
+      .then(() => self.skipWaiting())   // activate immediately
   );
 });
 
+/* ---- ACTIVATE: delete old caches ---- */
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())  // take control of all open tabs
   );
 });
 
+/* ---- FETCH ---- */
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  // Network first for API calls, cache first for assets
-  if (e.request.url.includes('supabase.co')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', { headers: { 'Content-Type': 'application/json' } })));
-  } else {
+  const { request } = e;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  // Never cache Supabase or CDN requests — always fresh
+  if (url.hostname.includes('supabase.co') || url.hostname.includes('jsdelivr.net')) {
     e.respondWith(
-      caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return res;
-      }))
+      fetch(request).catch(() =>
+        new Response(JSON.stringify({ error: 'offline' }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } })
+      )
     );
+    return;
   }
+
+  // HTML: network-first so new deploys are seen immediately
+  if (request.headers.get('accept')?.includes('text/html') || url.pathname === '/') {
+    e.respondWith(networkFirst(request));
+    return;
+  }
+
+  // JS / CSS: stale-while-revalidate — fast and always updating in background
+  if (url.pathname.match(/\.(js|css)$/)) {
+    e.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // Everything else: network-first with cache fallback
+  e.respondWith(networkFirst(request));
+});
+
+/* ---- Strategies ---- */
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_VERSION);
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    return cached || new Response('Offline — please reconnect', { status: 503 });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache  = await caches.open(CACHE_VERSION);
+  const cached = await cache.match(request);
+  const fetchPromise = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  }).catch(() => null);
+  return cached || await fetchPromise;
+}
+
+/* ---- Notify open tabs when a new SW version is waiting ---- */
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
