@@ -7,12 +7,16 @@
    - Everything else: network-first with cache fallback
    ============================================================ */
 
-const CACHE_VERSION = 'tmr-v3';
+const CACHE_VERSION = 'tmr-v4';
 const SHELL_ASSETS  = [
   '/',
   '/index.html',
   '/app.css',
   '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
+  '/icons/favicon-32.png',
   '/js/config.js',
   '/js/utils.js',
   '/js/db.js',

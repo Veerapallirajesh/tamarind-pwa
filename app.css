@@ -94,11 +94,13 @@ html, body {
 
 .app-logo {
   margin: 0 auto 14px;
-  width: 68px; height: 68px;
-  border-radius: 18px;
+  width: 80px; height: 80px;
+  border-radius: 20px;
   background: var(--accent-light);
   display: flex; align-items: center; justify-content: center;
   border: 1.5px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.15);
 }
 
 .login-box h1, .pin-box h1 {
